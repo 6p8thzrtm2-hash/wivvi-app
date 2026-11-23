@@ -98,6 +98,8 @@ class _Run:
     async def execute(self) -> DiscoveryResponse:
         await self.progress("parse", "Understanding the event")
         plan = await self.llm(prompts.PARSE_PROMPT.format(event=self.event, n=self.e.max_initial_queries))
+        if isinstance(plan, dict) and "error" in plan:
+            raise RippleError("Please enter a valid scientific or real-world event.")
         if not isinstance(plan, dict):
             plan = {}
         origin_label = _str(plan.get("origin_label"), 60) or self.event[:60]
@@ -115,7 +117,7 @@ class _Run:
             raise NoSearchResults()
 
         await self.progress("extract", f"Extracting relationships from {len(hop1_sources)} sources")
-        await self.extract(graph, hop1_sources, focus=None)
+        await self.extract(graph, hop1_sources[:10], focus=None)
         self.hops = 1
 
         if graph.edge_count and self.e.max_followup_queries > 0:
@@ -214,7 +216,8 @@ class _Run:
                 source_domain=graph.g.nodes[src]["domain"], target_domain=graph.g.nodes[dst]["domain"],
                 relation=_str(raw.get("relation"), 80) or "affects",
                 mechanism=_str(raw.get("mechanism"), 400),
-                status=status, source_ids=cited, confidence=_clamp(raw.get("confidence"))))
+                status=status, source_ids=cited, confidence=_clamp(raw.get("confidence")),
+                likelihood_score=raw.get("likelihood_score")))
         return added
 
     async def explore(self, graph: RelationshipGraph) -> None:
@@ -236,7 +239,7 @@ class _Run:
                 self.warnings.append("Second-order searches returned no new sources.")
                 return
             await self.progress("extract", f"Extracting second-order relationships from {len(new_sources)} sources")
-            await self.extract(graph, new_sources, focus=[n["label"] for n in frontier])
+            await self.extract(graph, new_sources[:10], focus=[n["label"] for n in frontier])
             self.hops = 2
         except (SerpApiInvalidKey, GeminiInvalidKey):
             raise

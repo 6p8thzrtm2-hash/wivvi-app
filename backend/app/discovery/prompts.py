@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 
-PARSE_PROMPT = """You are the planning module of Ripple, a cross-domain relationship discovery engine.
+PARSE_PROMPT = """You are the planning module of Wivvi, a cross-domain relationship discovery engine.
 
 A user observed this event, trend or observation:
 <event>{event}</event>
@@ -29,10 +29,12 @@ Rules for queries (exactly {n} of them):
   manufacturing, labor, culture, technology, environment, geopolitics, finance, retail).
 - Phrase them as searches likely to return news or analysis that explicitly describes
   a causal link, e.g. "natural gas prices impact fertilizer production".
+  - Assign a likelihood score from 1 to 100 based on how strong the potential evidence link is.
 - Keep each query under 12 words. No quotes or search operators.
+- IMPORTANT: If the <event> is gibberish, abusive, or completely unrelated to real-world events, science, economics, or earth systems (e.g., "asdfgh", "what is 2+2", "how to hack a bank"), DO NOT generate queries. Instead, return exactly this JSON: {{"error": "invalid_query"}}
 """
 
-EXTRACT_PROMPT = """You are the relationship-extraction module of Ripple.
+EXTRACT_PROMPT = """You are the relationship-extraction module of Wivvi.
 
 Origin event: "{origin_label}" (domain: {domain})
 User's description: {event}
@@ -56,6 +58,7 @@ Return JSON:
       "mechanism": "1-2 sentences explaining how, based on the sources",
       "source_ids": ["S1"],
       "support": "explicit or inferred",
+      "likelihood_score": 80,
       "confidence": 0.0
     }}
   ]
@@ -68,10 +71,10 @@ Rules:
   inference from cited results that they do not state outright.
 - Never invent facts, numbers or sources. If the results do not support a link, omit it.
 - Prefer chains (A -> B, then B -> C) that travel into other domains.
-- Return between 0 and 14 relationships. Returning none is acceptable.
+- Return between 0 and 5 relationships. Returning none is acceptable.
 """
 
-FOLLOWUP_PROMPT = """You are the exploration module of Ripple. The investigation of
+FOLLOWUP_PROMPT = """You are the exploration module of Wivvi. The investigation of
 "{origin_label}" has reached these frontier entities in the relationship graph:
 
 {frontier}
@@ -84,7 +87,7 @@ Return JSON:
 {{"queries": [{{"entity": "frontier entity name exactly as given", "query": "..."}}]}}
 """
 
-SYNTHESIZE_PROMPT = """You are the explanation module of Ripple. Below are candidate
+SYNTHESIZE_PROMPT = """You are the explanation module of Wivvi. Below are candidate
 relationship chains that start at "{origin_label}". Every step was extracted from cited
 web sources; steps marked [hypothesis] are inferences not directly stated by a source.
 

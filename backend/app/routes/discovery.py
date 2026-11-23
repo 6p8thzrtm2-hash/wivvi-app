@@ -10,10 +10,10 @@ import logging
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
-from ..deps import (Services, current_session, rate_key, require_client_header, resolve_credentials,
-                    services)
+from ..deps import (Services, current_session, resolve_credentials, rate_key, require_client_header, services)
 from ..errors import RippleError, SerpApiInvalidKey
 from ..models import DiscoverRequest, DiscoveryResponse
+from ..security import Secret
 
 router = APIRouter(prefix="/api", tags=["discovery"])
 logger = logging.getLogger("ripple.discovery")
@@ -22,7 +22,13 @@ logger = logging.getLogger("ripple.discovery")
 def _prepare(request: Request, svc: Services):
     sid, data = current_session(request)
     svc.discovery_limiter.check(rate_key(sid))
-    return sid, resolve_credentials(svc, data)
+    import os
+    creds = resolve_credentials(svc, data)
+    if not creds.serpapi_key:
+        env_key = os.getenv("SERPAPI_API_KEY")
+        if env_key:
+            creds.serpapi_key = Secret(env_key)
+    return sid, creds
 
 
 @router.post("/discover", response_model=DiscoveryResponse,
@@ -40,7 +46,8 @@ async def discover(body: DiscoverRequest, request: Request,
 @router.post("/discover/stream", dependencies=[Depends(require_client_header)])
 async def discover_stream(body: DiscoverRequest, request: Request,
                           svc: Services = Depends(services)) -> StreamingResponse:
-    sid, creds = _prepare(request, svc)  # auth errors are returned before streaming
+    print("🚨 WIVVI SEARCH STARTED")
+    sid, creds = _prepare(request, svc) # auth errors are returned before streaming
     queue: asyncio.Queue = asyncio.Queue()
 
     async def progress(stage: str, message: str, detail: dict | None = None) -> None:
@@ -48,6 +55,7 @@ async def discover_stream(body: DiscoverRequest, request: Request,
 
     async def worker() -> None:
         try:
+            print("🕸️ ASKING THE ENGINE (SERPAPI & GEMINI)...")
             result = await svc.engine.run(body.event, creds, progress)
             await queue.put({"type": "result", "data": result.model_dump()})
         except RippleError as exc:

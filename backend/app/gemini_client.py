@@ -24,7 +24,7 @@ GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 
 class GeminiClient:
-    def __init__(self, http: httpx.AsyncClient, *, model: str = "gemini-3.5-flash",
+    def __init__(self, http: httpx.AsyncClient, *, model: str = "gemini-3.5-flash-lite",
                  fallback_model: str | None = None, base_url: str = GEMINI_BASE, timeout: float = 60.0):
         self._http = http
         self._model = model
@@ -36,7 +36,7 @@ class GeminiClient:
         try:
             response = await self._http.get(
                 f"{self._base}/models/{self._model}",
-                headers={"x-goog-api-key": api_key.reveal()}, timeout=15.0)
+                headers={"x-goog-api-key": api_key.reveal()}, timeout=45.0)
         except httpx.TimeoutException:
             raise GeminiTimeout() from None
         except httpx.HTTPError:
@@ -70,10 +70,12 @@ class GeminiClient:
 
     async def _generate(self, model: str, body: dict, api_key: Secret, timeout: float) -> Any:
         try:
+            print("📡 SENDING REQUEST TO GEMINI NOW...")
             response = await self._http.post(
                 f"{self._base}/models/{model}:generateContent",
                 headers={"x-goog-api-key": api_key.reveal(), "content-type": "application/json"},
-                json=body, timeout=timeout)
+                json=body, timeout=15.0)
+            print("✅ GEMINI RESPONDED WITH DATA!")
         except httpx.TimeoutException:
             logger.warning("Gemini request timed out")
             raise GeminiTimeout() from None

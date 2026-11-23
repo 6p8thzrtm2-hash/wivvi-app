@@ -30,7 +30,7 @@ export default function AppShell({ status, result, query, running, progress, las
     <header className="z-30 grid h-16 shrink-0 grid-cols-[auto_1fr_auto] items-center gap-3 px-4 md:grid-cols-[160px_1fr_auto] md:px-6">
       <div className="flex items-center gap-1.5">
         <span className="relative flex h-5 w-5 items-center justify-center" aria-hidden="true"><span className="absolute h-5 w-5 rounded-full border-2 border-[#3B9EFF]/30" /><span className="absolute h-3 w-3 rounded-full border-2 border-[#3B9EFF]/60" /><span className="h-1.5 w-1.5 rounded-full bg-[#3B9EFF]" /></span>
-        <span className="text-[17px] font-semibold tracking-tight text-ink">ripple</span>
+        <span className="text-[17px] font-semibold tracking-tight text-ink">Wivvi</span>
       </div>
       <SearchBar initialValue={query} nodes={result.graph.nodes} running={running} liveReady={ready} liveDisabledReason={liveDiscoveryProblem} onLocalSelect={onLocalFocus} onLiveSubmit={onLiveSearch} onConfigure={() => setSettingsOpen(true)} onCancel={onCancel} />
       <div className="flex items-center justify-end gap-2">

@@ -60,6 +60,7 @@ class Relationship:
     status: str  # evidence | hypothesis
     source_ids: list[str]
     confidence: float
+    likelihood_score: int | None = None
 
 
 class RelationshipGraph:

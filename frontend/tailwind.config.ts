@@ -5,13 +5,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        paper: "#FAF8F5",
+        paper: "#061820",
         surface: "#FFFFFF",
         ink: "#1E2227",
         muted: "#6B7079",
         faint: "#A3A7AE",
         line: "rgba(30,34,39,.08)",
-        accent: "#3B9EFF",
+        accent: "#00E8DA",
       },
       fontFamily: {
         sans: ["var(--font-geist)", "ui-sans-serif", "system-ui", "sans-serif"],

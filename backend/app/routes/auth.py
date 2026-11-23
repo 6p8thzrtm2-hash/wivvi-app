@@ -3,6 +3,8 @@ Gemini key connect for deployments without a server-side Gemini key."""
 
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, Field, SecretStr
 
@@ -82,10 +84,27 @@ async def serpapi_status(request: Request, response: Response,
                          svc: Services = Depends(services)) -> ConnectionStatus:
     sid = session_id(request)
     data = svc.store.get(sid) if sid else None
+    
+    import os
+    env_serp = os.getenv("SERPAPI_API_KEY")
+    env_gem = os.getenv("GEMINI_API_KEY")
+    
+    # If there is no session, but we have keys in the .env file, create a session!
+    if env_serp and not data:
+        data = SessionData(
+            serpapi_key=Secret(env_serp),
+            gemini_key=Secret(env_gem) if env_gem else None,
+            created_at=svc.store.now(),
+            serpapi_account="Env Key"
+        )
+        sid = svc.store.create(data)
+        _set_cookie(svc, response, sid)
+
     if sid and data is None:
         _clear_cookie(svc, response)
         return _status(svc, None, expired=True)
     return _status(svc, data)
+
 
 
 @router.post("/serpapi/disconnect", response_model=ConnectionStatus,
