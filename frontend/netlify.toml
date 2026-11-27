@@ -1,0 +1,6 @@
+# Netlify build settings for the Next.js frontend.
+# The site's base directory is "frontend", so every path below is relative to
+# this folder. Settings in this file take precedence over the dashboard.
+[build]
+  command = "npm run build"
+  publish = ".next"
