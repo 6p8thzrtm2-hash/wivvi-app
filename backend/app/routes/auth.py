@@ -95,7 +95,7 @@ async def serpapi_status(request: Request, response: Response,
             serpapi_key=Secret(env_serp),
             gemini_key=Secret(env_gem) if env_gem else None,
             created_at=svc.store.now(),
-            serpapi_account="Env Key"
+            serpapi_account={}
         )
         sid = svc.store.create(data)
         _set_cookie(svc, response, sid)
